@@ -1,11 +1,13 @@
 ﻿using KedaiAPI.Models;
 using KedaiAPI.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KedaiAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
@@ -58,6 +60,16 @@ namespace KedaiAPI.Controllers
             }
 
             return Unauthorized(new Response { Status = true, Message = "Invalid credentials" });
+        }
+
+
+        [HttpPost]
+        [Route("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            return Ok(new Response { Status = true, Message = "User has been signed out" });
         }
     }
 }
