@@ -32,7 +32,7 @@ namespace KedaiAPI.Controllers
 
             var user = new User
             {
-                UserName = request.Name,
+                Name = request.Name,
                 Email = request.Email,
             };
 
