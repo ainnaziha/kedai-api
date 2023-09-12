@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace KedaiAPI.DbContext
+namespace KedaiAPI.Data
 {
     public class ApplicationDBContext : IdentityDbContext<User>
     {
@@ -11,5 +11,7 @@ namespace KedaiAPI.DbContext
         {
             base.OnModelCreating(builder);
         }
+        public DbSet<Product> Products { get; set; }
+
     }
 }

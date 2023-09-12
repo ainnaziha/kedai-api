@@ -1,4 +1,4 @@
-using KedaiAPI.DbContext;
+using KedaiAPI.Data;
 using KedaiAPI.Models;
 using KedaiAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
