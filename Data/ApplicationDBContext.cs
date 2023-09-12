@@ -11,7 +11,8 @@ namespace KedaiAPI.Data
         {
             base.OnModelCreating(builder);
         }
-        public DbSet<Product> Products { get; set; }
+        public virtual DbSet<Product> Products { get; set; }
+
 
     }
 }
