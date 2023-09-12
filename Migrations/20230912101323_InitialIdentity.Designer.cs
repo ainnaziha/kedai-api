@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KedaiAPI.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20230912050941_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20230912101323_InitialIdentity")]
+    partial class InitialIdentity
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -24,7 +24,7 @@ namespace KedaiAPI.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("KedaiAPI.IdentityAuth.ApplicationUser", b =>
+            modelBuilder.Entity("KedaiAPI.Models.User", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -34,6 +34,10 @@ namespace KedaiAPI.Migrations
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
@@ -233,7 +237,7 @@ namespace KedaiAPI.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("KedaiAPI.IdentityAuth.ApplicationUser", null)
+                    b.HasOne("KedaiAPI.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -242,7 +246,7 @@ namespace KedaiAPI.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("KedaiAPI.IdentityAuth.ApplicationUser", null)
+                    b.HasOne("KedaiAPI.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -257,7 +261,7 @@ namespace KedaiAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("KedaiAPI.IdentityAuth.ApplicationUser", null)
+                    b.HasOne("KedaiAPI.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -266,7 +270,7 @@ namespace KedaiAPI.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("KedaiAPI.IdentityAuth.ApplicationUser", null)
+                    b.HasOne("KedaiAPI.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

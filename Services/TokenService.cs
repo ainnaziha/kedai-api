@@ -20,7 +20,7 @@ namespace KedaiAPI.Services
         {
             var authClaims = new List<Claim>()
             {
-                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.GivenName, user.DisplayName),
                 new Claim(ClaimTypes.Email, user.Email)
             };
 
