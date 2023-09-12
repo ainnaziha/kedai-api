@@ -1,10 +1,10 @@
-﻿using KedaiAPI.IdentityAuth;
+﻿using KedaiAPI.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace KedaiAPI.DbContext
 {
-    public class ApplicationDBContext : IdentityDbContext<ApplicationUser>
+    public class ApplicationDBContext : IdentityDbContext<User>
     {
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options) { }
         protected override void OnModelCreating(ModelBuilder builder)
