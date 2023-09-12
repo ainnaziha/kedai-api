@@ -32,8 +32,9 @@ namespace KedaiAPI.Controllers
 
             var user = new User
             {
-                Name = request.Name,
+                DisplayName = request.Name,
                 Email = request.Email,
+                UserName = request.Email,
             };
 
             var result = await _userManager.CreateAsync(user, request.Password);
