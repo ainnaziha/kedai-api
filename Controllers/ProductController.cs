@@ -18,9 +18,23 @@ namespace KedaiAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProducts()
+        public async Task<IActionResult> GetProducts([FromQuery] int? categoryId)
         {
-            return Ok(await dBContext.Products.ToListAsync());
+            IQueryable<Product> query = dBContext.Products;
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            }
+
+            var products = await query.ToListAsync();
+
+            if (products == null || products.Count == 0)
+            {
+                return NotFound();
+            }
+
+            return Ok(products);
         }
 
         [HttpGet("{id}")]
@@ -35,6 +49,5 @@ namespace KedaiAPI.Controllers
 
             return product;
         }
-
     }
 }
