@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KedaiAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/product")]
     [ApiController]
     public class ProductController : ControllerBase
     {
@@ -26,12 +26,16 @@ namespace KedaiAPI.Controllers
             {
                 query = query.Where(p => p.CategoryId == categoryId.Value);
             }
+            else
+            {
+                query = query.OrderBy(_ => Guid.NewGuid());
+            }
 
             var products = await query.ToListAsync();
 
             if (products == null || products.Count == 0)
             {
-                return NotFound();
+                return Ok(new List<Product>());
             }
 
             return Ok(products);
@@ -44,7 +48,7 @@ namespace KedaiAPI.Controllers
 
             if (product == null)
             {
-                return NotFound();
+                return Ok(new List<Product>());
             }
 
             return product;
