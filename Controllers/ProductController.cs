@@ -31,7 +31,7 @@ namespace KedaiAPI.Controllers
 
             if (products == null || products.Count == 0)
             {
-                return NotFound();
+                return Ok(new List<Product>());
             }
 
             return Ok(products);
@@ -44,7 +44,7 @@ namespace KedaiAPI.Controllers
 
             if (product == null)
             {
-                return NotFound();
+                return Ok(new List<Product>());
             }
 
             return product;
