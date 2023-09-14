@@ -16,7 +16,7 @@ namespace KedaiAPI.Services
             _configuration = configuration;
         }
 
-        public Task<string> CreateTokenAsync(User user, UserManager<User> userManager)
+        public Task<TokenResult> CreateTokenAsync(User user, UserManager<User> userManager)
         {
             var authClaims = new List<Claim>()
             {
@@ -30,11 +30,17 @@ namespace KedaiAPI.Services
                 issuer: _configuration["JWT:ValidIssuer"],
                 audience: _configuration["JWT:ValidAudience"],
                 claims: authClaims,
-                expires: DateTime.Now.AddYears(2),
+                expires: DateTime.Now.AddHours(8),
                 signingCredentials: new SigningCredentials(authKey, SecurityAlgorithms.HmacSha256Signature)
             );
 
-            return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
+            var tokenResult = new TokenResult
+            {
+                Result = new JwtSecurityTokenHandler().WriteToken(token),
+                Expiry = token.ValidTo
+            };
+
+            return Task.FromResult(tokenResult);
         }
     }
 }
