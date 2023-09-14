@@ -5,6 +5,6 @@ namespace KedaiAPI.Services
 {
     public interface ITokenService
     {
-        Task<string> CreateTokenAsync(User user, UserManager<User> userManager);
+        Task<TokenResult> CreateTokenAsync(User user, UserManager<User> userManager);
     }
 }
