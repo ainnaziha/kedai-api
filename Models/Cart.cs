@@ -6,6 +6,7 @@
         public string UserId { get; set; }
         public bool IsCompleted { get; set; }
 
+        public User User { get; set; }
         public ICollection<CartItem> CartItems { get; } = new List<CartItem>();
     }
 }
