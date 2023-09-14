@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KedaiAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/category")]
     [ApiController]
     public class CategoryController : ControllerBase
     {
