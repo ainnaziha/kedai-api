@@ -38,7 +38,61 @@ namespace KedaiAPI.Controllers
             var response = new CartResponse
             {
                 Id = cart.Id,
-                Total = total,
+                Total = string.Format("RM {0:0.00}", total),
+                Items = cartItems
+            };
+
+            return Ok(new Response { Status = true, Data = response });
+        }
+
+        [HttpPost]
+        [Route("add")]
+        public IActionResult AddToCart([FromBody] CartRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                return Unauthorized(new Response { Status = false, Message = "Unauthorized access!" });
+            }
+
+            var cart = GetOrCreateCart(userId);
+
+            var product = dBContext.Products.FirstOrDefault(p => p.Id == request.ProductId);
+
+            if (product == null)
+            {
+                return NotFound(new Response { Status = false, Message = "Product not found!" });
+            }
+
+            var existingCartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == request.ProductId && !ci.IsDeleted);
+
+            if (existingCartItem != null)
+            {
+                existingCartItem.Quantities++;
+            }
+            else
+            {
+                var newCartItem = new CartItem
+                {
+                    CartId = cart.Id,
+                    ProductId = request.ProductId,
+                    Quantities = 1,
+                    IsDeleted = false
+                };
+
+                dBContext.CartItems.Add(newCartItem);
+            }
+
+            dBContext.SaveChanges();
+
+            var total = CalculateTotal(cart);
+            var cartItems = GetCartItems(cart);
+
+            var response = new CartResponse
+            {
+                Id = cart.Id,
+                Total = string.Format("RM {0:0.00}", total),
                 Items = cartItems
             };
 
@@ -47,7 +101,10 @@ namespace KedaiAPI.Controllers
 
         private Cart GetOrCreateCart(string userId)
         {
-            var existingCart = dBContext.Carts.FirstOrDefault(c => c.UserId == userId && !c.IsCompleted);
+            var existingCart = dBContext.Carts
+                .Include(cart => cart.CartItems)
+                .ThenInclude(cartItem => cartItem.Product)
+                .FirstOrDefault(c => c.UserId == userId && !c.IsCompleted);
 
             if (existingCart != null)
             {
@@ -82,7 +139,7 @@ namespace KedaiAPI.Controllers
                     Id = ci.Id,
                     Product = ci.Product,
                     Quantity = ci.Quantities,
-                    Subtotal = ci.Product.Price * ci.Quantities
+                    Subtotal = string.Format("RM {0:0.00}", ci.Product.Price * ci.Quantities),
                 }).ToList();
         }
     }
