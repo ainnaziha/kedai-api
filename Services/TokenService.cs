@@ -16,19 +16,13 @@ namespace KedaiAPI.Services
             _configuration = configuration;
         }
 
-        public async Task<string> CreateTokenAsync(User user, UserManager<User> userManager)
+        public Task<string> CreateTokenAsync(User user, UserManager<User> userManager)
         {
             var authClaims = new List<Claim>()
             {
+                new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.GivenName, user.DisplayName),
-                new Claim(ClaimTypes.Email, user.Email)
-            };
-
-            var userRoles = await userManager.GetRolesAsync(user);
-            foreach (var role in userRoles)
-            {
-                authClaims.Add(new Claim(ClaimTypes.Role, role));
-            }
+            };            
 
             var authKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"]));
 
@@ -36,10 +30,11 @@ namespace KedaiAPI.Services
                 issuer: _configuration["JWT:ValidIssuer"],
                 audience: _configuration["JWT:ValidAudience"],
                 claims: authClaims,
+                expires: DateTime.Now.AddYears(2),
                 signingCredentials: new SigningCredentials(authKey, SecurityAlgorithms.HmacSha256Signature)
             );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
         }
     }
 }
