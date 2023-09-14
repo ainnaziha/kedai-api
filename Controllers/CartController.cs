@@ -99,6 +99,58 @@ namespace KedaiAPI.Controllers
             return Ok(new Response { Status = true, Data = response });
         }
 
+        [HttpPut]
+        [Route("update")]
+        public IActionResult UpdateCartItem([FromBody] CartRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                return Unauthorized(new Response { Status = false, Message = "Unauthorized access!" });
+            }
+
+            var cart = dBContext.Carts
+                .Include(c => c.CartItems)
+                .ThenInclude(cartItem => cartItem.Product)
+                .FirstOrDefault(c => c.Id == request.CartId && c.UserId == userId && !c.IsCompleted);
+
+            if (cart == null)
+            {
+                return NotFound(new Response { Status = false, Message = "Cart not found!" });
+            }
+
+            var existingCartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == request.ProductId && !ci.IsDeleted);
+
+            if (existingCartItem == null)
+            {
+                return NotFound(new Response { Status = false, Message = "Cart item not found!" });
+            }
+
+            if (request.Quantity == 0)
+            {
+                existingCartItem.IsDeleted = true;
+            }
+            else
+            {
+                existingCartItem.Quantities = request.Quantity!.Value;
+            }
+
+            dBContext.SaveChanges();
+
+            var total = CalculateTotal(cart);
+            var cartItems = GetCartItems(cart);
+
+            var response = new CartResponse
+            {
+                Id = cart.Id,
+                Total = string.Format("RM {0:0.00}", total),
+                Items = cartItems
+            };
+
+            return Ok(new Response { Status = true, Data = response });
+        }
+
         private Cart GetOrCreateCart(string userId)
         {
             var existingCart = dBContext.Carts
