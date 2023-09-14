@@ -63,7 +63,6 @@ namespace KedaiAPI.Controllers
             return Unauthorized(new Response { Status = true, Message = "Invalid credentials" });
         }
 
-
         [HttpPost]
         [Route("logout")]
         [Authorize]
