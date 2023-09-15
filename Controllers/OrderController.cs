@@ -31,20 +31,47 @@ namespace KedaiAPI.Controllers
                 return Unauthorized(new Response { Status = false, Message = "Unauthorized access!" });
             }
 
-            //todo: create order no starting with KAO_00001
-            //todo: save order no, userId, cartId, total to orders table
-            //return order as response
-            Order order = null;
+            string newOrderNo = GenerateOrderNumber();
+
+            var order = new Order
+            {
+                UserId = userId,
+                OrderNo = newOrderNo,
+                CartId = request.CartId,
+                Total = request.Total
+            };
+
+            dbContext.Orders.Add(order);
+            dbContext.SaveChanges();
 
             return Ok(new Response { Status = true, Data = order });
         }
 
+        private string GenerateOrderNumber()
+        {
+            string latestOrderNo = _dbContext.Orders.OrderByDescending(o => o.Id).Select(o => o.OrderNo).FirstOrDefault();
+            int orderNumber = int.Parse(latestOrderNo?.Split('_').LastOrDefault() ?? "0") + 1;
+            return $"KAO_{orderNumber:D5}";
+        }
+
         [HttpPut]
         [Route("{order_id}/complete")]
-        public IActionResult CompleteOrder([FromBody] CompleteOrderRequest request)
+        public IActionResult CompleteOrder(int order_id, [FromBody] CompleteOrderRequest request)
         {
-            //todo: check order id if exist
-            //todo: update name, email, street, town and invoice no if any
+            var order = _dbContext.Orders.FirstOrDefault(o => o.Id == order_id);
+
+            if (order == null)
+            {
+                return NotFound(new Response { Status = false, Message = "Order not found!" });
+            }
+
+            order.Name = request.Name;
+            order.Email = request.Email;
+            order.Street = request.Street;
+            order.Town = request.Town;
+            order.InvoiceNo = request.InvoiceNo;
+
+            dbContext.SaveChanges();
 
             return Ok(new Response { Status = true });
         }
@@ -59,9 +86,12 @@ namespace KedaiAPI.Controllers
                 return Unauthorized(new Response { Status = false, Message = "Unauthorized access!" });
             }
 
-           //todo: get orders based on user id, only completed orders
+            var completedOrders = _dbContext.Orders
+                    .Where(o => o.UserId == userId && o.IsCompleted)
+                    .Include(o => o.Cart.CartItems)
+                    .ToList();
 
-            return Ok(new Response { Status = true });
+            return Ok(new Response { Status = true, Data = completedOrders });
         }
     }
 }
