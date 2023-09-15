@@ -17,5 +17,6 @@ namespace KedaiAPI.Data
         public virtual DbSet<Category> Categories { get; set; }
         public virtual DbSet<Cart> Carts { get; set; }
         public virtual DbSet<CartItem> CartItems { get; set; }
+        public virtual DbSet<Order> Orders { get; set; }
     }
 }
