@@ -10,5 +10,9 @@
         public int CategoryId { get; set; }
         public virtual Category Category { get; set; }
 
+        public string FormattedPrice
+        {
+            get { return string.Format("RM {0:0.00}", Price); }
+        }
     }
 }
