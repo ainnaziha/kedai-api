@@ -43,6 +43,22 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["JWT:ValidAudience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:SecretKey"]))
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = async context =>
+        {
+            context.HandleResponse();
+            context.Response.StatusCode = 401;
+            var response = new Response()
+            {
+                Status = false,
+                Message = "Unauthorized access!"
+            };
+
+            await context.Response.WriteAsJsonAsync(response);
+        }
+    };
 });
 
 builder.Services.AddEndpointsApiExplorer();
