@@ -2,7 +2,7 @@
 {
     public class OrderNoRequest
     {
-        public int CartId {  get; set; }
+        public List<int> CartIds {  get; set; }
         public string Total { get; set; }
     }
 
@@ -13,5 +13,6 @@
         public string Street { get; set; }
         public string Town { get; set; }
         public string InvoiceNo { get; set; }
+        public List<int> CartIds { get; set; }
     }
 }
