@@ -10,7 +10,6 @@
 
     public class CartResponse
     {
-        public int Id { get; set; }
         public string Total { get; set; }
         public List<CartItemResponse> Items { get; set; }
     }
