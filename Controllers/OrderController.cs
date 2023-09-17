@@ -21,8 +21,8 @@ namespace KedaiAPI.Controllers
         }
 
         [HttpPost]
-        [Route("create-order-no")]
-        public IActionResult CreateOrderNo([FromBody] OrderNoRequest request)
+        [Route("checkout")]
+        public IActionResult CheckOut()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -31,34 +31,44 @@ namespace KedaiAPI.Controllers
                 return Unauthorized(new Response { Status = false, Message = "Unauthorized access!" });
             }
 
-            string newOrderNo = GenerateOrderNumber();
+            string orderNo = GenerateOrderNumber();
 
-            var order = new Order
+            Order order = new()
             {
                 UserId = userId,
-                OrderNo = newOrderNo,
-                CartId = request.CartId,
-                Total = request.Total
+                OrderNo = orderNo,
             };
 
-            dbContext.Orders.Add(order);
-            dbContext.SaveChanges();
+            dBContext.Orders.Add(order);
+            dBContext.SaveChanges();
 
-            return Ok(new Response { Status = true, Data = order });
+            return Ok(new Response { Status = true, Data = orderNo });
         }
 
         private string GenerateOrderNumber()
         {
-            string latestOrderNo = _dbContext.Orders.OrderByDescending(o => o.Id).Select(o => o.OrderNo).FirstOrDefault();
-            int orderNumber = int.Parse(latestOrderNo?.Split('_').LastOrDefault() ?? "0") + 1;
+            int orderNumber = 1;
+
+            Order? latestOrder = dBContext.Orders
+                ?.OrderByDescending(o => o.Id)
+                .FirstOrDefault();
+
+            if (latestOrder != null)
+            {
+                string latestOrderNo = latestOrder.OrderNo;
+                _ = int.TryParse(latestOrderNo?.Split('_').LastOrDefault(), out orderNumber);
+                orderNumber++;
+            }
+
             return $"KAO_{orderNumber:D5}";
         }
 
+
         [HttpPut]
         [Route("{order_id}/complete")]
-        public IActionResult CompleteOrder(int order_id, [FromBody] CompleteOrderRequest request)
+        public IActionResult CompleteOrder(int order_id, [FromBody] OrderRequest request)
         {
-            var order = _dbContext.Orders.FirstOrDefault(o => o.Id == order_id);
+            Order? order = dBContext.Orders.FirstOrDefault(o => o.Id == order_id);
 
             if (order == null)
             {
@@ -70,11 +80,22 @@ namespace KedaiAPI.Controllers
             order.Street = request.Street;
             order.Town = request.Town;
             order.InvoiceNo = request.InvoiceNo;
+            order.Total = request.Total;
 
-            dbContext.SaveChanges();
+            if (request.CartIds != null && request.CartIds.Any())
+            {
+                var cartsToUpdate = dBContext.Carts.Where(c => request.CartIds.Contains(c.Id)).ToList();
+                foreach (var cart in cartsToUpdate)
+                {
+                    cart.OrderId = order.Id;
+                }
+            }
 
-            return Ok(new Response { Status = true });
+            dBContext.SaveChanges();
+
+            return Ok(new Response { Status = true, Message = $"Payment for order {order.OrderNo} is successful." });
         }
+
 
         [HttpGet]
         public IActionResult GetOrders()
@@ -86,12 +107,12 @@ namespace KedaiAPI.Controllers
                 return Unauthorized(new Response { Status = false, Message = "Unauthorized access!" });
             }
 
-            var completedOrders = _dbContext.Orders
-                    .Where(o => o.UserId == userId && o.IsCompleted)
-                    .Include(o => o.Cart.CartItems)
+            List<Order> orders = dBContext.Orders
+                    .Where(o => o.UserId == userId && o.IsPaid)
+                    .Include(o => o.Carts)
                     .ToList();
 
-            return Ok(new Response { Status = true, Data = completedOrders });
+            return Ok(new Response { Status = true, Data = orders });
         }
     }
 }
