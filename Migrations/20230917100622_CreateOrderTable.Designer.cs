@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KedaiAPI.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20230917095418_RefactorCartTable")]
-    partial class RefactorCartTable
+    [Migration("20230917100622_CreateOrderTable")]
+    partial class CreateOrderTable
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -32,8 +32,14 @@ namespace KedaiAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<bool>("IsCompleted")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -41,38 +47,11 @@ namespace KedaiAPI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProductId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Carts");
-                });
-
-            modelBuilder.Entity("KedaiAPI.Models.CartItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int>("CartId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantities")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CartId");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("CartItems");
                 });
 
             modelBuilder.Entity("KedaiAPI.Models.Category", b =>
@@ -333,32 +312,21 @@ namespace KedaiAPI.Migrations
 
             modelBuilder.Entity("KedaiAPI.Models.Cart", b =>
                 {
-                    b.HasOne("KedaiAPI.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("KedaiAPI.Models.CartItem", b =>
-                {
-                    b.HasOne("KedaiAPI.Models.Cart", "Cart")
-                        .WithMany("CartItems")
-                        .HasForeignKey("CartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("KedaiAPI.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Cart");
+                    b.HasOne("KedaiAPI.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Product");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("KedaiAPI.Models.Product", b =>
@@ -421,11 +389,6 @@ namespace KedaiAPI.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("KedaiAPI.Models.Cart", b =>
-                {
-                    b.Navigation("CartItems");
                 });
 
             modelBuilder.Entity("KedaiAPI.Models.Category", b =>
