@@ -30,17 +30,7 @@ namespace KedaiAPI.Controllers
                 return Unauthorized(new Response { Status = false, Message = "Unauthorized access!" });
             }
 
-            var cart = GetOrCreateCart(userId);
-
-            var total = CalculateTotal(cart);
-            var cartItems = GetCartItems(cart);
-
-            var response = new CartResponse
-            {
-                Id = cart.Id,
-                Total = string.Format("RM {0:0.00}", total),
-                Items = cartItems
-            };
+            CartResponse response = GetCartResponse(userId);
 
             return Ok(new Response { Status = true, Data = response });
         }
@@ -56,45 +46,29 @@ namespace KedaiAPI.Controllers
                 return Unauthorized(new Response { Status = false, Message = "Unauthorized access!" });
             }
 
-            var cart = GetOrCreateCart(userId);
+            Cart? cart = dBContext.Carts
+                .FirstOrDefault(c => c.UserId == userId && !c.IsDeleted && c.ProductId == request.ProductId);
 
-            var product = dBContext.Products.FirstOrDefault(p => p.Id == request.ProductId);
-
-            if (product == null)
+            if (cart == null)
             {
-                return NotFound(new Response { Status = false, Message = "Product not found!" });
-            }
+                cart = new Cart
+                {
+                    UserId = userId,
+                    ProductId = request.ProductId ?? 0,
+                    Quantity = 1,
+                    IsDeleted = false,
+                };
 
-            var existingCartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == request.ProductId && !ci.IsDeleted);
-
-            if (existingCartItem != null)
-            {
-                existingCartItem.Quantities++;
+                dBContext.Carts.Add(cart);
             }
             else
             {
-                var newCartItem = new CartItem
-                {
-                    CartId = cart.Id,
-                    ProductId = request.ProductId,
-                    Quantities = 1,
-                    IsDeleted = false
-                };
-
-                dBContext.CartItems.Add(newCartItem);
+                cart.Quantity++;
             }
 
             dBContext.SaveChanges();
 
-            var total = CalculateTotal(cart);
-            var cartItems = GetCartItems(cart);
-
-            var response = new CartResponse
-            {
-                Id = cart.Id,
-                Total = string.Format("RM {0:0.00}", total),
-                Items = cartItems
-            };
+            CartResponse response = GetCartResponse(userId);
 
             return Ok(new Response { Status = true, Data = response });
         }
@@ -110,89 +84,80 @@ namespace KedaiAPI.Controllers
                 return Unauthorized(new Response { Status = false, Message = "Unauthorized access!" });
             }
 
-            var cart = dBContext.Carts
-                .Include(c => c.CartItems)
-                .ThenInclude(cartItem => cartItem.Product)
-                .FirstOrDefault(c => c.Id == request.CartId && c.UserId == userId && !c.IsCompleted);
+            Cart? cart = dBContext.Carts
+                .FirstOrDefault(c => c.Id == request.CartId && c.UserId == userId && !c.IsDeleted);
 
             if (cart == null)
             {
                 return NotFound(new Response { Status = false, Message = "Cart not found!" });
             }
 
-            var existingCartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == request.ProductId && !ci.IsDeleted);
-
-            if (existingCartItem == null)
-            {
-                return NotFound(new Response { Status = false, Message = "Cart item not found!" });
-            }
-
-            if (request.Quantity == 0)
-            {
-                existingCartItem.IsDeleted = true;
-            }
-            else
-            {
-                existingCartItem.Quantities = request.Quantity!.Value;
-            }
+            cart.Quantity = request.Quantity ?? 0;
+            cart.IsDeleted = request.Quantity == 0;
 
             dBContext.SaveChanges();
 
-            var total = CalculateTotal(cart);
-            var cartItems = GetCartItems(cart);
-
-            var response = new CartResponse
-            {
-                Id = cart.Id,
-                Total = string.Format("RM {0:0.00}", total),
-                Items = cartItems
-            };
+            CartResponse response = GetCartResponse(userId);
 
             return Ok(new Response { Status = true, Data = response });
         }
 
-        private Cart GetOrCreateCart(string userId)
+        [HttpDelete]
+        [Route("delete")]
+        public IActionResult DeleteCart()
         {
-            var existingCart = dBContext.Carts
-                .Include(cart => cart.CartItems)
-                .ThenInclude(cartItem => cartItem.Product)
-                .FirstOrDefault(c => c.UserId == userId && !c.IsCompleted);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (existingCart != null)
+            if (userId == null)
             {
-                return existingCart;
+                return Unauthorized(new Response { Status = false, Message = "Unauthorized access!" });
             }
 
-            var newCart = new Cart
-            {
-                UserId = userId,
-                IsCompleted = false
-            };
+            List<Cart> cartsToDelete = dBContext.Carts
+                .Where(c => c.UserId == userId && !c.IsDeleted)
+                .ToList();
 
-            dBContext.Carts.Add(newCart);
+            foreach (Cart cart in cartsToDelete)
+            {
+                cart.IsDeleted = true;
+            }
+
             dBContext.SaveChanges();
 
-            return newCart;
-        }
-
-        private double CalculateTotal(Cart cart)
-        {
-            return cart.CartItems
-                .Where(ci => !ci.IsDeleted)
-                .Sum(ci => ci.Product.Price * ci.Quantities);
-        }
-
-        private List<CartItemResponse> GetCartItems(Cart cart)
-        {
-            return cart.CartItems
-                .Where(ci => !ci.IsDeleted)
-                .Select(ci => new CartItemResponse
+            return Ok(new Response
+            {
+                Status = true,
+                Message = "Cart emptied successfully!",
+                Data = new CartResponse
                 {
-                    Id = ci.Id,
-                    Product = ci.Product,
-                    Quantity = ci.Quantities,
-                    Subtotal = string.Format("RM {0:0.00}", ci.Product.Price * ci.Quantities),
-                }).ToList();
+                    Total = "RM 0.00",
+                    Items = new List<CartItemResponse>()
+                }
+            });
+        }
+
+        private CartResponse GetCartResponse(string userId)
+        {
+            List<Cart> carts = dBContext.Carts
+              .Include(c => c.Product)
+              .Where(c => c.UserId == userId && !c.IsDeleted)
+              .ToList();
+
+            List<CartItemResponse> items = carts.SelectMany(cart => new List<CartItemResponse>
+            {
+                new CartItemResponse
+                {
+                    Id = cart.Id,
+                    Product = cart.Product,
+                    Quantity = cart.Quantity,
+                    Subtotal = string.Format("RM {0:0.00}", cart.Product.Price * cart.Quantity),
+                }
+            }).ToList();
+
+            return new CartResponse { 
+                Total = string.Format("RM {0:0.00}", carts.Sum(ci => ci.Product.Price * ci.Quantity)),
+                Items = items,
+            };
         }
     }
 }
