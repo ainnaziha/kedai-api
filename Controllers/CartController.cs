@@ -57,6 +57,7 @@ namespace KedaiAPI.Controllers
                     ProductId = request.ProductId ?? 0,
                     Quantity = 1,
                     IsDeleted = false,
+                    OrderId = null,
                 };
 
                 dBContext.Carts.Add(cart);
