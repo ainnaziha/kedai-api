@@ -33,8 +33,6 @@ namespace KedaiAPI.Controllers
 
             string orderNo = GenerateOrderNumber();
 
-            Console.WriteLine("\n\n\n\ntest1\n\n\n\n\n");
-
             Order order = new()
             {
                 UserId = userId,
@@ -57,7 +55,6 @@ namespace KedaiAPI.Controllers
 
             if (latestOrder != null)
             {
-                Console.WriteLine("\n\n\n\ntest\n\n\n\n\n");
                 string latestOrderNo = latestOrder.OrderNo;
                 _ = int.TryParse(latestOrderNo.Split('_').LastOrDefault(), out orderNumber);
                 orderNumber++;
