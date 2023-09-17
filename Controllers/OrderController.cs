@@ -33,6 +33,8 @@ namespace KedaiAPI.Controllers
 
             string orderNo = GenerateOrderNumber();
 
+            Console.WriteLine("\n\n\n\ntest1\n\n\n\n\n");
+
             Order order = new()
             {
                 UserId = userId,
@@ -50,13 +52,14 @@ namespace KedaiAPI.Controllers
             int orderNumber = 1;
 
             Order? latestOrder = dBContext.Orders
-                ?.OrderByDescending(o => o.Id)
+                .OrderByDescending(o => o.Id)
                 .FirstOrDefault();
 
             if (latestOrder != null)
             {
+                Console.WriteLine("\n\n\n\ntest\n\n\n\n\n");
                 string latestOrderNo = latestOrder.OrderNo;
-                _ = int.TryParse(latestOrderNo?.Split('_').LastOrDefault(), out orderNumber);
+                _ = int.TryParse(latestOrderNo.Split('_').LastOrDefault(), out orderNumber);
                 orderNumber++;
             }
 
