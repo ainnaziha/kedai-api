@@ -35,6 +35,24 @@ namespace KedaiAPI.Controllers
             return Ok(new Response { Status = true, Data = response });
         }
 
+        [HttpGet]
+        [Route("total")]
+        public IActionResult GetCartTotal()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                return Unauthorized(new Response { Status = false, Message = "Unauthorized access!" });
+            }
+
+            int cartCount = dBContext.Carts
+                .Where(c => c.UserId == userId && !c.IsDeleted)
+                .Count();
+
+            return Ok(new Response { Status = true, Data = cartCount });
+        }
+
         [HttpPost]
         [Route("add")]
         public IActionResult AddToCart([FromBody] CartRequest request)
