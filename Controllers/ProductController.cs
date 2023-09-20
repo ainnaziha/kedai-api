@@ -20,7 +20,7 @@ namespace KedaiAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetProducts([FromQuery] int? categoryId)
         {
-            IQueryable<Product> query = dBContext.Products;
+            IQueryable<Product> query = dBContext.Products.Include(p => p.Category);
 
             if (categoryId.HasValue)
             {
@@ -44,7 +44,9 @@ namespace KedaiAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
-            var product = await dBContext.Products.FindAsync(id);
+            var product = await dBContext.Products
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
             {
