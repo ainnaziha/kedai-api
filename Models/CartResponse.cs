@@ -11,6 +11,8 @@
     public class CartResponse
     {
         public string Total { get; set; }
+        public string TotalFormatted { get; set; }
+
         public List<CartItemResponse> Items { get; set; }
     }
 }
