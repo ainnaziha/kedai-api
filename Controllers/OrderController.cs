@@ -42,14 +42,14 @@ namespace KedaiAPI.Controllers
             dBContext.Orders.Add(order);
             dBContext.SaveChanges();
 
-            return Ok(new Response { Status = true, Data = orderNo });
+            return Ok(new Response { Status = true, Data = order });
         }
 
         private string GenerateOrderNumber()
         {
             int orderNumber = 1;
 
-            Order? latestOrder = dBContext.Orders
+            var latestOrder = dBContext.Orders
                 .OrderByDescending(o => o.Id)
                 .FirstOrDefault();
 
@@ -65,10 +65,10 @@ namespace KedaiAPI.Controllers
 
 
         [HttpPut]
-        [Route("{order_id}/complete")]
-        public IActionResult CompleteOrder(int order_id, [FromBody] OrderRequest request)
+        [Route("{id}/complete")]
+        public IActionResult CompleteOrder(int id, [FromBody] OrderRequest request)
         {
-            Order? order = dBContext.Orders.FirstOrDefault(o => o.Id == order_id);
+            var order = dBContext.Orders.FirstOrDefault(o => o.Id == id);
 
             if (order == null)
             {
@@ -81,6 +81,7 @@ namespace KedaiAPI.Controllers
             order.Town = request.Town;
             order.InvoiceNo = request.InvoiceNo;
             order.Total = request.Total;
+            order.IsPaid = true;
 
             if (request.CartIds != null && request.CartIds.Any())
             {
