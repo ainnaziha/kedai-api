@@ -47,7 +47,7 @@ namespace KedaiAPI.Controllers
             }
 
             int cartCount = dBContext.Carts
-                .Where(c => c.UserId == userId && !c.IsDeleted)
+                .Where(c => c.UserId == userId && !c.IsDeleted && c.OrderId == null)
                 .Count();
 
             return Ok(new Response { Status = true, Data = cartCount });
@@ -160,7 +160,7 @@ namespace KedaiAPI.Controllers
         {
             List<Cart> carts = dBContext.Carts
               .Include(c => c.Product)
-              .Where(c => c.UserId == userId && !c.IsDeleted)
+              .Where(c => c.UserId == userId && !c.IsDeleted && c.OrderId == null)
               .ToList();
 
             List<CartItemResponse> items = carts.SelectMany(cart => new List<CartItemResponse>
