@@ -149,10 +149,11 @@ namespace KedaiAPI.Controllers
                 Message = "Cart emptied successfully!",
                 Data = new CartResponse
                 {
-                    Total = "RM 0.00",
+                    Total = "0.00",
+                    TotalFormatted = "RM 0.00",
                     Items = new List<CartItemResponse>()
                 }
-            });
+            }); ; ;
         }
 
         private CartResponse GetCartResponse(string userId)
@@ -173,8 +174,9 @@ namespace KedaiAPI.Controllers
                 }
             }).ToList();
 
-            return new CartResponse { 
-                Total = string.Format("RM {0:0.00}", carts.Sum(ci => ci.Product.Price * ci.Quantity)),
+            return new CartResponse {
+                Total = string.Format("{0:0.00}", carts.Sum(ci => ci.Product.Price * ci.Quantity)),
+                TotalFormatted = string.Format("RM {0:0.00}", carts.Sum(ci => ci.Product.Price * ci.Quantity)),
                 Items = items,
             };
         }
