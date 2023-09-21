@@ -111,6 +111,7 @@ namespace KedaiAPI.Controllers
             List<Order> orders = dBContext.Orders
                     .Where(o => o.UserId == userId && o.IsPaid)
                     .Include(o => o.Carts)
+                    .ThenInclude(cart => cart.Product)                     
                     .ToList();
 
             return Ok(new Response { Status = true, Data = orders });
